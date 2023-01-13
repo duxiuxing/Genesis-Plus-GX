@@ -12,6 +12,8 @@ sdl/gen_sdl2
 sdl/build_sdl
 sdl/build_sdl2
 
+/build_wii
+/genplus_wii.*
 /libretro/msvc/msvc-2017/msvc-2017.vcxproj.user
 
 *.o
