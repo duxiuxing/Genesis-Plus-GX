@@ -2,7 +2,7 @@
  *  Genesis Plus
  *  Mega CD / Sega CD hardware
  *
- *  Copyright (C) 2012-2021  Eke-Eke (Genesis Plus GX)
+ *  Copyright (C) 2012-2022  Eke-Eke (Genesis Plus GX)
  *
  *  Redistribution and use of this code or any derivative works are permitted
  *  provided that the following conditions are met:
@@ -548,7 +548,7 @@ static unsigned int scd_read_byte(unsigned int address)
   }
 
   /* Font data */
-  if ((address >= 0x50) && (address <= 0x56))
+  if ((address >= 0x50) && (address <= 0x57))
   {
     /* shifted 4-bit input (xxxx00) */
     uint8 bits = (scd.regs[0x4e>>1].w >> (((address & 6) ^ 6) << 1)) << 2;
@@ -798,6 +798,7 @@ static void scd_write_byte(unsigned int address, unsigned int data)
     }
 
     case 0x03: /* Memory Mode */
+    case 0x02: /* !LDS and !UDS are ignored (verified on real hardware, cf. Krikzz's mcd-verificator) */
     {
       s68k_poll_sync(1<<0x03);
 
@@ -931,6 +932,13 @@ static void scd_write_byte(unsigned int address, unsigned int data)
           /* RET bit set in 2M mode */
           if (data & 0x01)
           {
+            /* check if graphics operation is running */
+            if (scd.regs[0x58>>1].byte.h & 0x80)
+            {
+              /* synchronize GFX processing with SUB-CPU */
+              gfx_update(s68k.cycles);
+            }
+
             /* Word-RAM is returned to MAIN-CPU */
             scd.dmna = 0;
 
@@ -952,8 +960,8 @@ static void scd_write_byte(unsigned int address, unsigned int data)
       return;
     }
 
-    case 0x0e:  /* SUB-CPU communication flags */
-    case 0x0f:  /* !LWR is ignored (Space Ace, Dragon's Lair) */
+    case 0x0f:  /* SUB-CPU communication flags */
+    case 0x0e:  /* !LDS and !UDS are ignored (verified on real hardware, cf. Krikzz's mcd-verificator, Space Ace, Dragon's Lair) */
     {
       s68k_poll_sync(1<<0x0f);
       scd.regs[0x0f>>1].byte.l = data;
@@ -961,6 +969,7 @@ static void scd_write_byte(unsigned int address, unsigned int data)
     }
 
     case 0x31: /* Timer */
+    case 0x30: /* !LDS and !UDS are ignored (verified on real hardware, cf. Krikzz's mcd-verificator) */
     {
       /* reload timer (one timer clock = 384 CPU cycles) */
       scd.timer = data * TIMERS_SCYCLES_RATIO;
@@ -990,6 +999,13 @@ static void scd_write_byte(unsigned int address, unsigned int data)
       /* update IRQ level */
       s68k_update_irq((scd.pending & data) >> 1);
       return;
+    }
+
+    case 0x4d: /* Font Color */
+    case 0x4c: /* !LDS and !UDS are ignored (verified on real hardware, cf. Krikzz's mcd-verificator) */
+    {
+       scd.regs[0x4c>>1].byte.l = data;
+       break;
     }
 
     default:
@@ -1187,6 +1203,13 @@ static void scd_write_word(unsigned int address, unsigned int data)
           /* RET bit set in 2M mode */
           if (data & 0x01)
           {
+            /* check if graphics operation is running */
+            if (scd.regs[0x58>>1].byte.h & 0x80)
+            {
+              /* synchronize GFX processing with SUB-CPU */
+              gfx_update(s68k.cycles);
+            }
+
             /* Word-RAM is returned to MAIN-CPU */
             scd.dmna = 0;
 
@@ -1573,7 +1596,6 @@ void scd_reset(int hard)
     scd.dmna = 0;
 
     /* H-INT default vector */
-    *(uint16 *)(m68k.memory_map[scd.cartridge.boot].base + 0x70) = 0x00FF;
     *(uint16 *)(m68k.memory_map[scd.cartridge.boot].base + 0x72) = 0xFFFF;
 
     /* Power ON initial values (MAIN-CPU side) */
