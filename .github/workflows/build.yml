@@ -1,0 +1,63 @@
+name: Genesis Plus GX Build
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # image: ["Wii", "GameCube"]
+        image: ["Wii"] # only for Wii
+    container: devkitpro/devkitppc:latest
+ 
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Build Wii
+      if: ${{ matrix.image == 'Wii' }}
+      run: |
+        make -f Makefile.wii -j2
+    
+    - name: Copy Wii artifacts
+      if: ${{ matrix.image == 'Wii' }}
+      run: | 
+        mkdir -p dist/apps/genplus-gx
+        mkdir -p dist/genplus-gx/roms
+        mkdir dist/genplus-gx/cheats
+        mkdir dist/genplus-gx/saves
+        touch dist/genplus-gx/roms/romsdir
+        touch dist/genplus-gx/cheats/cheatsdir
+        touch dist/genplus-gx/saves/savesdir
+        cp hbc/* dist/apps/genplus-gx/
+        cp genplus_wii.dol dist/apps/genplus-gx/boot.dol
+
+    - name: Upload Wii artifacts
+      uses: actions/upload-artifact@v3
+      if: ${{ matrix.image == 'Wii' }}
+      with: 
+        name: Genesis-Plus-GX
+        path: |
+         dist/
+    
+    - name: Build GameCube
+      if: ${{ matrix.image == 'GameCube' }}
+      run: |
+        make -f Makefile.gc -j2
+        
+    - name: Copy GameCube artifact
+      if: ${{ matrix.image == 'GameCube' }}
+      run: |
+        cp genplus_cube.dol dist/
+    
+    - name: Upload GameCube artifact
+      uses: actions/upload-artifact@v3
+      if: ${{ matrix.image == 'GameCube' }}
+      with: 
+        name: Genesis-Plus-GX-GameCube
+        path: |
+         dist/
