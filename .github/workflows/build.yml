@@ -27,12 +27,12 @@ jobs:
       if: ${{ matrix.image == 'Wii' }}
       run: | 
         mkdir -p dist/apps/genplus-gx
-        mkdir -p dist/genplus-gx/roms
-        mkdir dist/genplus-gx/cheats
-        mkdir dist/genplus-gx/saves
-        touch dist/genplus-gx/roms/romsdir
-        touch dist/genplus-gx/cheats/cheatsdir
-        touch dist/genplus-gx/saves/savesdir
+        mkdir -p dist/genplus/cheats
+        mkdir dist/genplus/roms
+        mkdir dist/genplus/saves
+        touch dist/genplus/cheats/cheatsdir        
+        touch dist/genplus/roms/romsdir
+        touch dist/genplus/saves/savesdir
         cp hbc/* dist/apps/genplus-gx/
         cp genplus_wii.dol dist/apps/genplus-gx/boot.dol
 
