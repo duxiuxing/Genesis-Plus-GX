@@ -158,11 +158,31 @@ static gui_menu menu_selector =
   selector_cb
 };
 
+// upd xjsxjs 197 start
+wchar_t* charToWideChar(char* strChar) {
+	wchar_t strWChar[strlen(strChar) + 1];
+
+	int bt = mbstowcs(strWChar, strChar, strlen(strChar));
+	if (bt) {
+		strWChar[bt] = (wchar_t)'\0';
+		return strWChar;
+	}
+
+	wchar_t *tempDest = strWChar;
+	while((*tempDest++ = *strChar++));
+
+	return strWChar;
+}
+// upd xjsxjs 197 end
 
 static void selector_cb(void)
 {
   int i;
-  char text[MAXPATHLEN];
+  // upd xjsxjs 197 start
+  //char text[MAXPATHLEN];
+  wchar_t strWChar[MAXPATHLEN >> 1];
+  wchar_t *tmpWChar;
+  // upd xjsxjs 197 end
   int yoffset = 108;
 
   /* Draw browser array */
